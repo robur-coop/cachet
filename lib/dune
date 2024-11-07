@@ -1,0 +1,8 @@
+(library
+ (name cachet)
+ (modes native)
+ ; (foreign_stubs
+ ;   (language c)
+ ;   (mode byte)
+ ;   (names hash))
+ (modules cachet))
