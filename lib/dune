@@ -1,7 +1,6 @@
 (library
  (name cachet)
  (public_name cachet)
- (modes native byte)
  (foreign_stubs
   (language c)
   (mode byte)
