@@ -28,3 +28,52 @@ let () =
   let seq = Cachet.get_seq cache 0 in
   ...
 ```
+
+## Cachet and schedulers
+
+Cachet is designed to treat the `map` function as **atomic**. In other words: a
+unit of work that is indivisible and guaranteed to be executed as a single,
+coherent, and uninterrupted operation. Therefore, the `load` function (used to
+load a page) cannot be more cooperative (and give other tasks the opportunity to
+run) than it already is.
+
+Using Cachet with a scheduler requires addressing two issues:
+1) enabling cooperation **after** a page has been loaded
+2) the possibility of parallel loading of the page to ensure that other tasks
+   can be executed
+
+For the first point, with regard to Lwt or Async, it's essentially a question of
+potentially adding `Lwt.pause` or `Async.yield` after using `Cachet.load` (or
+the user-friendly functions):
+```ocaml
+let () = Lwt_main.run begin
+  let page = Cachet.load cache 0xdead in
+  let* () = Lwt.pause () in
+  ... end
+```
+
+For the second point, only OCaml 5 and effects can answer this issue by using an
+effect which will notify the scheduler to read the page **in parallel**.
+```ocaml
+let map fd ~pos len = Effect.perform (Scheduler.Pread (fd, pos, len))
+
+let () = Scheduler.run begin fun () ->
+    let fd = Unix.openfile "disk.img" Unix.[ O_RDONLY ] 0o644 in
+    let finally () = Unix.close fd in
+    Fun.protect ~finally @@ fun () ->
+    let cache = Cachet.make ~pagesize:(getpagesize ()) ~map fd in
+    let page = Cachet.load cache 0xdead in
+    ...
+  end
+```
+
+Note that this is only effective if the page is read **in parallel**. If this is
+not the case, adding a cooperation point as you could do with Lwt/Async is
+enough. Reading a page remains **atomic** and allowing other tasks to run at
+the same time as this reading implies that the latter must necessarily be done
+in parallel (via a `Thread` or a `Domain`).
+
+Finally, the Cachet documentation specifies how many pages we would need to read
+to obtain the requested value. As a result, it's up to the user to know where
+the cooperation point should be placed and whether it makes sense to use, for
+example, `get_string` or just use `load` interspersed with cooperation points.
