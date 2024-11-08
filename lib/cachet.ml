@@ -337,3 +337,13 @@ let iter t ?len ~fn logical_address =
         | None -> ()
       in
       go logical_address
+
+let syscalls t ~logical_address ~len =
+  let pagesize = 1 lsl t.pagesize in
+  let len = (logical_address land (pagesize - 1)) + len in
+  let len =
+    if (pagesize - 1) land len != 0 then
+      (len + pagesize) land lnot (pagesize - 1)
+    else len
+  in
+  len lsr t.pagesize

@@ -31,12 +31,30 @@ module Bstr : sig
   val get_int64_ne : t -> int -> int64
   val get_int64_le : t -> int -> int64
   val get_int64_be : t -> int -> int64
+
   val sub : t -> off:int -> len:int -> t
+  (** [sub bstr ~off ~len] does not allocate a bigstring, but instead returns a new
+      view into [bstr] starting at [off], and with length [len].
+
+      {b Note} that this does not allocate a new buffer, but instead shares the
+      buffer of [bstr] with the newly-returned bigstring. *)
+
   val sub_string : t -> off:int -> len:int -> string
+  (** [sub_string bstr ~off ~len] returns a string of length [len] containing the
+      bytes of [t] starting at [off]. *)
+
   val to_string : t -> string
+  (** [to_string bstr] is equivalent to [sub_string bstr ~off:0 ~len:(length bstr)]. *)
 
   val blit_to_bytes :
     t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
+  (** [blit_to_bytes src ~src_off dst ~dst_off ~len] copies [len] bytes from
+      [src], starting at index [src_off], to byte sequence [dst], starting at
+      index [dst_off].
+
+      @raise Invalid_argument if [src_off] and [len] do not designate a valid
+      range of [src], or if [dst_off] and [len] do not designate a valid range
+      of [dst]. *)
 
   val is_empty : t -> bool
 
@@ -75,7 +93,7 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
     Depending on how the cache is configured (see {!val:make}), [map] never
     read more than [pagesize] bytes. *)
 
-(** {2: Note about schedulers and [Cachet].}
+(** {2 Note about schedulers and [Cachet].}
 
     [Cachet] assumes that {!type:map} is {b atomic}, in other words: {!type:map}
     is a unit of work that is indivisible and guaranteed to be executed as a
@@ -84,7 +102,7 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
     In this way, the [map] function is considered as a "direct" computation that
     does {b not} interact with a scheduler. However, reading a page can take
     time. It may therefore be necessary to add a cooperation point after
-    {!val:load} or the user-friendly functions.
+    {!val:load} or the {{!user_friendly} user-friendly functions}.
 
     These functions can read one or more pages. {!val:load} reads one page at
     most. *)
@@ -120,7 +138,7 @@ val load : 'fd t -> ?len:int -> int -> slice option
 val invalidate : 'fd t -> off:int -> len:int -> unit
 (** [invalidate t ~off ~len] invalidates the cache on [len] bytes from [off]. *)
 
-(** {2 User friendly functions.} *)
+(** {2:user_friendly User friendly functions.} *)
 
 (** {3 Binary decoding of integers.}
 
@@ -159,14 +177,36 @@ val get_int32_be : 'fd t -> int -> int32
 val get_int64_ne : 'fd t -> int -> int64
 val get_int64_le : 'fd t -> int -> int64
 val get_int64_be : 'fd t -> int -> int64
+
 val get_string : 'fd t -> len:int -> int -> string
+(** [get_string t ~len logical_address] loads the various pages needed from the
+    cache or using [map] to copy [len] bytes available at [off].
+
+    You can use {!val:syscalls} to find out how many times [get_string] can
+    call [map] at most.
+
+    @raise Failure if the [map] function cannot give us enough to copy [len]
+    bytes. *)
+
 val get_seq : 'fd t -> int -> string Seq.t
 val next : 'fd t -> slice -> slice option
 val iter : 'fd t -> ?len:int -> fn:(int -> unit) -> int -> unit
 
 val blit_to_bytes :
   'fd t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
+(** [blit_to_bytes t ~src_off dst ~dst_off ~len] copies [len] bytes from
+    the cached {i block-device} represented by [t], starting at index [src_off]
+    as the logical address, to byte sequence [dst], starting at index
+    [dst_off].
 
-(*
-val blit_to_bigstring : 'fd t -> src_off:int -> bigstring -> dst_off:int -> len:int -> unit
-*)
+    This function can read several pages depending on the size of the [dst]
+    buffer.
+
+    @raise Invalid_argument if [src_off] and [len] do not designate a valid
+    range of the {i block-device}, or if [dst_off] and [len] do not designate a
+    valid range of [dst]. *)
+
+val syscalls : 'fd t -> logical_address:int -> len:int -> int
+(** [syscalls t ~logicial_address ~len] returns the maximum number (if the cache
+    is empty) of calls to [map] to load a segment of the block-device according
+    to the [logical_address] and the size [len] (in bytes) of the segment. *)
