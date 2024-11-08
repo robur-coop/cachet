@@ -34,6 +34,18 @@ module Bstr : sig
   (** [get_uint8 bstr i] is [bstr]'s unsigned 8-bit integer starting at byte
       index [i]. *)
 
+  val get_uint16_ne : t -> int -> int
+  (** [get_int16_ne bstr i] is [bstr]'s native-endian unsigned 16-bit integer
+      starting at byte index [i]. *)
+
+  val get_uint16_le : t -> int -> int
+  (** [get_int16_le bstr i] is [bstr]'s little-endian unsigned 16-bit integer
+      starting at byte index [i]. *)
+
+  val get_uint16_be : t -> int -> int
+  (** [get_int16_be bstr i] is [bstr]'s big-endian unsigned 16-bit integer
+      starting at byte index [i]. *)
+
   val get_int16_ne : t -> int -> int
   (** [get_int16_ne bstr i] is [bstr]'s native-endian signed 16-bit integer
       starting at byte index [i]. *)
@@ -97,24 +109,70 @@ module Bstr : sig
       of [dst]. *)
 
   val is_empty : t -> bool
+  (** [is_empty bstr] is [length bstr = 0]. *)
+
   val is_prefix : affix:string -> t -> bool
+  (** [is_prefix ~affix bstr] is [true] iff [affix.[idx] = bstr.{idx}] for all
+      indices [idx] of [affix]. *)
+
   val is_infix : affix:string -> t -> bool
+  (** [is_infix ~affix bstr] is [true] iff there exists an index [j] in [bstr]
+      such that for all indices [i] of [affix] we have [affix.[i] = bstr.{j +
+      i}]. *)
+
   val is_suffix : affix:string -> t -> bool
+  (** [is_suffix ~affix bstr] is [true] iff [affix.[n - idx] = bstr.{m - idx}]
+      for all indices [idx] of [affix] with [n = String.length affix - 1] and
+      [m = length bstr - 1]. *)
+
   val for_all : (char -> bool) -> t -> bool
+  (** [for_all p bstr] is [true] iff for all indices [idx] of [bstr], [p
+      bstr.{idx} = true]. *)
+
   val exists : (char -> bool) -> t -> bool
+  (** [exists p bstr] is [true] iff there exists an index [idx] of [bstr] with
+      [p bstr.{idx} = true]. *)
+
   val equal : t -> t -> bool
+  (** [equal a b] is [a = b]. *)
+
   val with_range : ?first:int -> ?len:int -> t -> t
+  (** [with_range ~first ~len bstr] are the consecutive bytes of [bstr] whose
+      indices exist in the range \[[first];[first + len - 1]\].
+
+      [first] defaults to [0] and [len] to [max_int]. Note that [first] can be
+      any integer and [len] any positive integer. *)
+
   val with_index_range : ?first:int -> ?last:int -> t -> t
+  (** [with_index_range ~first ~last bstr] are the consecutive bytes of [bstr]
+      whose indices exists in the range \[[first];[last]\].
+
+      [first] defaults to [0] and [last] to [length bstr - 1].
+
+      Note that both [first] and [last] can be any integer. If [first > last]
+      the interval is empty and the empty bigstring is returned. *)
+
   val trim : ?drop:(char -> bool) -> t -> t
+  (** [trim ~drop bstr] is [bstr] with prefix and suffix bytes satisfying
+      [drop] in [bstr] removed. [drop] defaults to [fun chr -> chr = ' ']. *)
 
   val span :
     ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t * t
-  (*
-  val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
-  val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
-  val cut : ?rev:bool -> sep:string -> t -> (t * t) option
-  val cuts : ?rev:bool -> ?empty:bool -> sep:string -> t -> t list
-  *)
+  (** [span ~rev ~min ~max ~sat bstr] is [(l, r)] where:
+      {ul
+      {- if [rev] is [false] (default), [l] is at least [min] and at most [max]
+         consecutive [sat] satisfying initial bytes of [bstr] or {!empty} if
+         there are no such bytes. [r] are the remaining bytes of [bstr].}
+      {- if [rev] is [true], [r] is at least [min] and at most [max]
+         consecutive [sat] satisfying final bytes of [bstr] or {!empty} if there
+         are no such bytes. [l] are the remaining bytes of [bstr].}}
+
+      If [max] is unspecified the span is unlimited. If [min] is unspecified it
+      defaults to [0]. If [min > max] the condition can't be satisfied and the
+      left or right span, depending on [rev], is always empty. [sat] defaults to
+      [Fun.const true].
+
+      @raise Invalid_argument if [max] or [min] is negative. *)
 end
 
 type slice = private { offset: int; length: int; payload: Bstr.t }
