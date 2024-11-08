@@ -21,30 +21,64 @@ module Bstr : sig
       @raise Invalid_argument if [i] is not an index of [bstr]. *)
 
   val get_int8 : t -> int -> int
+  (** [get_int8 bstr i] is [bstr]'s signed 8-bit integer starting at byte index
+      [i]. *)
+
   val get_uint8 : t -> int -> int
+  (** [get_uint8 bstr i] is [bstr]'s unsigned 8-bit integer starting at byte
+      index [i]. *)
+
   val get_int16_ne : t -> int -> int
+  (** [get_int16_ne bstr i] is [bstr]'s native-endian signed 16-bit integer
+      starting at byte index [i]. *)
+
   val get_int16_le : t -> int -> int
+  (** [get_int16_le bstr i] is [bstr]'s little-endian signed 16-bit integer
+      starting at byte index [i]. *)
+
   val get_int16_be : t -> int -> int
+  (** [get_int16_be bstr i] is [bstr]'s big-endian signed 16-bit integer
+      starting at byte index [i]. *)
+
   val get_int32_ne : t -> int -> int32
+  (** [get_int32_ne bstr i] is [bstr]'s native-endian 32-bit integer starting
+      at byte index [i]. *)
+
   val get_int32_le : t -> int -> int32
+  (** [get_int32_le bstr i] is [bstr]'s little-endian 32-bit integer starting
+      at byte index [i]. *)
+
   val get_int32_be : t -> int -> int32
+  (** [get_int32_be bstr i] is [bstr]'s big-endian 32-bit integer starting at
+      byte index [i]. *)
+
   val get_int64_ne : t -> int -> int64
+  (** [get_int64_ne bstr i] is [bstr]'s native-endian 64-bit integer starting
+      at byte index [i]. *)
+
   val get_int64_le : t -> int -> int64
+  (** [get_int64_le bstr i] is [bstr]'s little-endian 64-bit integer starting
+      at byte index [i]. *)
+
   val get_int64_be : t -> int -> int64
+  (** [get_int64_be bstr i] is [bstr]'s big-endian 64-bit integer starting at
+      byte index [i]. *)
 
   val sub : t -> off:int -> len:int -> t
-  (** [sub bstr ~off ~len] does not allocate a bigstring, but instead returns a new
+  (** [sub bstr ~off ~len] does not allocate a bigstring, but instead returns a
+      new
       view into [bstr] starting at [off], and with length [len].
 
       {b Note} that this does not allocate a new buffer, but instead shares the
       buffer of [bstr] with the newly-returned bigstring. *)
 
   val sub_string : t -> off:int -> len:int -> string
-  (** [sub_string bstr ~off ~len] returns a string of length [len] containing the
-      bytes of [t] starting at [off]. *)
+  (** [sub_string bstr ~off ~len] returns a string of length [len] containing
+      the bytes of [t] starting at [off]. *)
 
   val to_string : t -> string
-  (** [to_string bstr] is equivalent to [sub_string bstr ~off:0 ~len:(length bstr)]. *)
+  (** [to_string bstr] is equivalent to [sub_string bstr ~off:0 ~len:(length
+      bstr)]. *)
 
   val blit_to_bytes :
     t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
@@ -57,10 +91,9 @@ module Bstr : sig
       of [dst]. *)
 
   val is_empty : t -> bool
-
-  (*
   val is_prefix : affix:string -> t -> bool
   val is_infix : affix:string -> t -> bool
+  (*
   val is_suffix : affix:string -> t -> bool
   val for_all : (char -> bool) -> t -> bool
   val exists : (char -> bool) -> t -> bool
@@ -105,7 +138,30 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
     {!val:load} or the {{!user_friendly} user-friendly functions}.
 
     These functions can read one or more pages. {!val:load} reads one page at
-    most. *)
+    most. 
+
+    {2 Note about large file and [Cachet].}
+
+    For performance reasons, Cachet has chosen to use an [int] rather than an
+    [int64] for the offset (the logical address). On a 64-bit architecture,
+    addressing in the block device should not be a problem and Cachet is able
+    to manage large block devices. However, on a 32-bit architecture, Cachet
+    should only be able to handle ~2 GB files.
+
+    We consider that it is up to the developer to check this:
+    {[
+      let _max_int31 = 2147483647L (* (1 lsl 31) - 1 *)
+
+      let () =
+        let fd = Unix.openfile "disk.img" Unix.[ O_RDONLY ] 0o644 in
+        let stat = Unix.LargeFile.fstat fd in
+        if Sys.word_size = 32 && stat.Unix.LargeFile.st_size > _max_int31
+        then failwith "Too big block-device";
+        ...
+    ]}
+
+    So that, as soon as possible, the user can find out whether or not the
+    program can handle large block-devices. *)
 
 type 'fd t
 
@@ -162,8 +218,8 @@ val get_int8 : 'fd t -> int -> int
     index [logical_address]. *)
 
 val get_uint8 : 'fd t -> int -> int
-(** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at byte
-    index [logical_address]. *)
+(** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at
+    byte index [logical_address]. *)
 
 val get_uint16_ne : 'fd t -> int -> int
 val get_uint16_le : 'fd t -> int -> int

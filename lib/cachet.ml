@@ -82,6 +82,37 @@ module Bstr = struct
 
   let to_string bstr = sub_string bstr ~off:0 ~len:(length bstr)
   let is_empty bstr = length bstr == 0
+
+  let is_prefix ~affix bstr =
+    let len_affix = String.length affix in
+    let len_bstr = length bstr in
+    if len_affix > len_bstr then false
+    else
+      let max_idx_affix = len_affix - 1 in
+      let rec go idx =
+        if idx > max_idx_affix then true
+        else if affix.[idx] != bstr.{idx} then false
+        else go (succ idx)
+      in
+      go 0
+
+  let is_infix ~affix bstr =
+    let len_affix = String.length affix in
+    let len_bstr = length bstr in
+    if len_affix > len_bstr then false
+    else
+      let max_idx_affix = len_affix - 1 in
+      let max_idx_bstr = len_bstr - len_affix in
+      let rec go idx k =
+        if idx > max_idx_bstr then false
+        else if k > max_idx_affix then true
+        else if k > 0 then
+          if affix.[k] == bstr.{idx + k} then go idx (succ k)
+          else go (succ idx) 0
+        else if affix.[0] = bstr.{idx} then go idx 1
+        else go (succ idx) 0
+      in
+      go 0 0
 end
 
 external hash : (int32[@unboxed]) -> int -> (int32[@unboxed])
