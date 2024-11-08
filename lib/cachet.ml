@@ -224,6 +224,77 @@ module Bstr = struct
     if first > max_idx || last < 0 || first > last then empty
     else if first == 0 && last = max_idx then bstr
     else sub bstr ~off:first ~len:(last + 1 - first)
+
+  let is_white chr = chr == ' '
+
+  let trim ?(drop = is_white) bstr =
+    let len = length bstr in
+    if len == 0 then bstr
+    else
+      let max_idx = len - 1 in
+      let rec left_pos idx =
+        if idx > max_idx then len
+        else if drop bstr.{idx} then left_pos (succ idx)
+        else idx
+      in
+      let rec right_pos idx =
+        if idx < 0 then 0
+        else if drop bstr.{idx} then right_pos (pred idx)
+        else succ idx
+      in
+      let left = left_pos 0 in
+      if left = len then empty
+      else
+        let right = right_pos max_idx in
+        if left == 0 && right == len then bstr
+        else sub bstr ~off:left ~len:(right - left)
+
+  let fspan ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.fspan";
+    if max < 0 then invalid_arg "Cachet.Bstr.fspan";
+    if min > max || max == 0 then (empty, bstr)
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let max_idx =
+        let k = max - 1 in
+        if k > max_idx then max_idx else k
+      in
+      let need_idx = min in
+      let rec go idx =
+        if idx <= max_idx && sat bstr.{idx} then go (succ idx)
+        else if idx < need_idx || idx == 0 then (empty, bstr)
+        else if idx == len then (bstr, empty)
+        else (sub bstr ~off:0 ~len:idx, sub bstr ~off:idx ~len:(len - idx))
+      in
+      go 0
+
+  let rspan ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.rspan";
+    if max < 0 then invalid_arg "Cachet.Bstr.rspan";
+    if min > max || max == 0 then (bstr, empty)
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let min_idx =
+        let k = len - max in
+        if k < 0 then 0 else k
+      in
+      let need_idx = max_idx - min in
+      let rec go idx =
+        if idx >= min_idx && sat bstr.{idx} then go (pred idx)
+        else if idx > need_idx || idx == max_idx then (bstr, empty)
+        else if idx == -1 then (empty, bstr)
+        else
+          let cut = idx + 1 in
+          (sub bstr ~off:0 ~len:cut, sub bstr ~off:cut ~len:(len - cut))
+      in
+      go 0
+
+  let span ?(rev = false) ?min ?max ?sat bstr =
+    match rev with
+    | true -> rspan ?min ?max ?sat bstr
+    | false -> fspan ?min ?max ?sat bstr
 end
 
 external hash : (int32[@unboxed]) -> int -> (int32[@unboxed])

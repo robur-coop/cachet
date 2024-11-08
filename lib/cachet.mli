@@ -105,9 +105,11 @@ module Bstr : sig
   val equal : t -> t -> bool
   val with_range : ?first:int -> ?len:int -> t -> t
   val with_index_range : ?first:int -> ?last:int -> t -> t
-  (*
   val trim : ?drop:(char -> bool) -> t -> t
-  val span : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t * t
+
+  val span :
+    ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t * t
+  (*
   val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
   val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
   val cut : ?rev:bool -> sep:string -> t -> (t * t) option
