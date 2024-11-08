@@ -55,6 +55,7 @@ let () = Lwt_main.run begin
 For the second point, only OCaml 5 and effects can answer this issue by using an
 effect which will notify the scheduler to read the page **in parallel**.
 ```ocaml
+(* see [man 3 pread] *)
 let map fd ~pos len = Effect.perform (Scheduler.Pread (fd, pos, len))
 
 let () = Scheduler.run begin fun () ->
