@@ -1,8 +1,12 @@
 (library
  (name cachet)
- (modes native)
- ; (foreign_stubs
- ;   (language c)
- ;   (mode byte)
- ;   (names hash))
+ (modes native byte)
+ (foreign_stubs
+  (language c)
+  (mode byte)
+  (names hash))
+ (foreign_stubs
+  (language c)
+  (mode native)
+  (names stub))
  (modules cachet))

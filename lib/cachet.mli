@@ -6,9 +6,20 @@ module Bstr : sig
 
   type t = private bigstring
 
+  val empty : t
+  (** [empty] is an empty bigstring. *)
+
   val of_bigstring : bigstring -> t
+
   val length : t -> int
+  (** [length bstr] is the number of bytes in [bstr]. *)
+
   val get : t -> int -> char
+  (** [get bstr i] is the byte of [bstr]' at index [i]. This is
+      equivalent to the [bstr.{i}] notation. 
+
+      @raise Invalid_argument if [i] is not an index of [bstr]. *)
+
   val get_int8 : t -> int -> int
   val get_uint8 : t -> int -> int
   val get_int16_ne : t -> int -> int
@@ -129,8 +140,13 @@ val invalidate : 'fd t -> off:int -> len:int -> unit
     zero-extend) their result. *)
 
 val get_int8 : 'fd t -> int -> int
+(** [get_int8 t logical_address] is [t]'s signed 8-bit integer starting at byte
+    index [logical_address]. *)
+
 val get_uint8 : 'fd t -> int -> int
-(*
+(** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at byte
+    index [logical_address]. *)
+
 val get_uint16_ne : 'fd t -> int -> int
 val get_uint16_le : 'fd t -> int -> int
 val get_uint16_be : 'fd t -> int -> int
@@ -143,8 +159,6 @@ val get_int32_be : 'fd t -> int -> int32
 val get_int64_ne : 'fd t -> int -> int64
 val get_int64_le : 'fd t -> int -> int64
 val get_int64_be : 'fd t -> int -> int64
-*)
-
 val get_string : 'fd t -> len:int -> int -> string
 val get_seq : 'fd t -> int -> string Seq.t
 val next : 'fd t -> slice -> slice option

@@ -9,6 +9,7 @@ module Bstr = struct
   type t = bigstring
 
   let of_bigstring x = x
+  let empty = Bigarray.Array1.create Bigarray.char Bigarray.c_layout 0
   let length = Bigarray.Array1.dim
 
   external get : t -> int -> char = "%caml_ba_ref_1"
@@ -229,6 +230,54 @@ let get_string t ~len logical_address =
   let buf = Bytes.create len in
   blit_to_bytes t ~src_off:logical_address buf ~dst_off:0 ~len;
   Bytes.unsafe_to_string buf
+
+let get_uint16_ne t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_uint16_ne str 0
+
+let get_uint16_le t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_uint16_le str 0
+
+let get_uint16_be t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_uint16_be str 0
+
+let get_int16_ne t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_int16_ne str 0
+
+let get_int16_le t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_int16_le str 0
+
+let get_int16_be t logical_address =
+  let str = get_string t ~len:2 logical_address in
+  String.get_int16_be str 0
+
+let get_int32_ne t logical_address =
+  let str = get_string t ~len:4 logical_address in
+  String.get_int32_ne str 0
+
+let get_int32_le t logical_address =
+  let str = get_string t ~len:4 logical_address in
+  String.get_int32_le str 0
+
+let get_int32_be t logical_address =
+  let str = get_string t ~len:4 logical_address in
+  String.get_int32_be str 0
+
+let get_int64_ne t logical_address =
+  let str = get_string t ~len:8 logical_address in
+  String.get_int64_ne str 0
+
+let get_int64_le t logical_address =
+  let str = get_string t ~len:8 logical_address in
+  String.get_int64_le str 0
+
+let get_int64_be t logical_address =
+  let str = get_string t ~len:8 logical_address in
+  String.get_int64_be str 0
 
 let rec get_seq t logical_address () =
   match load t logical_address with
