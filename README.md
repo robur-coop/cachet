@@ -18,7 +18,7 @@ let map fd ~pos len =
        Bigarray.array1_of_genarray barr
   else empty
 
-external getpagesize : unit -> int = "unix_getpagesize" [@noalloc]
+external getpagesize : unit -> int = "unix_getpagesize" [@@noalloc]
 
 let () =
   let fd = Unix.openfile "disk.img" Unix.[ O_RDONLY ] 0o644 in
