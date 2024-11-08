@@ -4,6 +4,38 @@ type bigstring =
 external swap16 : int -> int = "%bswap16"
 external swap32 : int32 -> int32 = "%bswap_int32"
 external swap64 : int64 -> int64 = "%bswap_int64"
+external get_uint8 : bigstring -> int -> int = "%caml_ba_ref_1"
+external set_uint8 : bigstring -> int -> int -> unit = "%caml_ba_set_1"
+external get_int32_ne : bigstring -> int -> int32 = "%caml_bigstring_get32"
+
+external set_int32_ne : bigstring -> int -> int32 -> unit
+  = "%caml_bigstring_set32"
+
+let memcpy src ~src_off dst ~dst_off ~len =
+  if
+    len < 0
+    || src_off < 0
+    || src_off > Bigarray.Array1.dim src - len
+    || dst_off < 0
+    || dst_off > Bigarray.Array1.dim dst - len
+  then invalid_arg "memcpy";
+  let len0 = len land 3 in
+  let len1 = len lsr 2 in
+  for i = 0 to len1 - 1 do
+    let i = i * 4 in
+    let v = get_int32_ne src (src_off + i) in
+    set_int32_ne dst (dst_off + i) v
+  done;
+  for i = 0 to len0 - 1 do
+    let i = (len1 * 4) + i in
+    let v = get_uint8 src (src_off + i) in
+    set_uint8 dst (dst_off + i) v
+  done
+
+let memmove src ~src_off dst ~dst_off ~len =
+  let src = Bigarray.Array1.sub src src_off len in
+  let dst = Bigarray.Array1.sub dst dst_off len in
+  Bigarray.Array1.blit src dst
 
 module Bstr = struct
   type t = bigstring
@@ -113,6 +145,85 @@ module Bstr = struct
         else go (succ idx) 0
       in
       go 0 0
+
+  let is_suffix ~affix bstr =
+    let max_idx_affix = String.length affix - 1 in
+    let max_idx_bstr = length bstr - 1 in
+    if max_idx_affix > max_idx_bstr then false
+    else
+      let rec go idx =
+        if idx > max_idx_affix then true
+        else if affix.[max_idx_affix - idx] != bstr.{max_idx_bstr - idx} then
+          false
+        else go (succ idx)
+      in
+      go 0
+
+  exception Break
+
+  let for_all sat bstr =
+    try
+      for idx = 0 to length bstr - 1 do
+        if sat bstr.{idx} == false then raise_notrace Break
+      done;
+      true
+    with Break -> false
+
+  let exists sat bstr =
+    try
+      for idx = 0 to length bstr - 1 do
+        if sat bstr.{idx} then raise_notrace Break
+      done;
+      false
+    with Break -> true
+
+  let equal a b =
+    if length a == length b then
+      try
+        let len = length a in
+        let len0 = len land 3 in
+        let len1 = len lsr 2 in
+        for i = 0 to len1 - 1 do
+          let i = i * 4 in
+          if get_int32_ne a i <> get_int32_ne b i then raise_notrace Break
+        done;
+        for i = 0 to len0 - 1 do
+          let i = (len1 * 4) + i in
+          if get_uint8 a i != get_uint8 b i then raise_notrace Break
+        done;
+        true
+      with Break -> false
+    else false
+
+  let with_range ?(first = 0) ?(len = max_int) bstr =
+    if len < 0 then invalid_arg "Cachet.Bstr.with_range";
+    if len == 0 then empty
+    else
+      let bstr_len = length bstr in
+      let max_idx = bstr_len - 1 in
+      let last =
+        match len with
+        | len when len = max_int -> max_idx
+        | len ->
+            let last = first + len - 1 in
+            if last > max_idx then max_idx else last
+      in
+      let first = if first < 0 then 0 else first in
+      if first = 0 && last = max_idx then bstr
+      else sub bstr ~off:first ~len:(last + 1 - first)
+
+  let with_index_range ?(first = 0) ?last bstr =
+    let bstr_len = length bstr in
+    let max_idx = bstr_len - 1 in
+    let last =
+      match last with
+      | None -> max_idx
+      | Some last -> if last > max_idx then max_idx else last
+    in
+    let first = if first < 0 then 0 else first in
+    if first > max_idx || last < 0 || first > last then empty
+    else if first == 0 && last = max_idx then bstr
+    else sub bstr ~off:first ~len:(last + 1 - first)
 end
 
 external hash : (int32[@unboxed]) -> int -> (int32[@unboxed])

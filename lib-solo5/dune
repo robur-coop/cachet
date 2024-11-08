@@ -1,0 +1,4 @@
+(library
+ (name cachet_solo5)
+ (public_name cachet-solo5)
+ (libraries cachet mirage-solo5))

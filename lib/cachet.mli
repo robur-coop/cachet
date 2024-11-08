@@ -1,6 +1,12 @@
 type bigstring =
   (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
+val memcpy :
+  bigstring -> src_off:int -> bigstring -> dst_off:int -> len:int -> unit
+
+val memmove :
+  bigstring -> src_off:int -> bigstring -> dst_off:int -> len:int -> unit
+
 module Bstr : sig
   (** A read-only bigstring. *)
 
@@ -93,14 +99,13 @@ module Bstr : sig
   val is_empty : t -> bool
   val is_prefix : affix:string -> t -> bool
   val is_infix : affix:string -> t -> bool
-  (*
   val is_suffix : affix:string -> t -> bool
   val for_all : (char -> bool) -> t -> bool
   val exists : (char -> bool) -> t -> bool
   val equal : t -> t -> bool
-  val compare : t -> t -> int
   val with_range : ?first:int -> ?len:int -> t -> t
   val with_index_range : ?first:int -> ?last:int -> t -> t
+  (*
   val trim : ?drop:(char -> bool) -> t -> t
   val span : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t * t
   val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
