@@ -2,7 +2,7 @@
 
 Cachet is a small library that provides a simple cache system for page-by-page
 read access on a block device. The cache system requires a map function, which
-can correspond to [Unix.map_file].
+can correspond to [Unix.map_file][unix-map-file].
 
 Here's a simple example using `Unix.map_file`:
 ```ocaml
@@ -78,3 +78,5 @@ Finally, the Cachet documentation specifies how many pages we would need to read
 to obtain the requested value. As a result, it's up to the user to know where
 the cooperation point should be placed and whether it makes sense to use, for
 example, `get_string` or just use `load` interspersed with cooperation points.
+
+[unix-map-file]: https://ocaml.org/manual/5.2/api/Unix.html#1_Mappingfilesintomemory
