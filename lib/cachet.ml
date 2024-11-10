@@ -295,6 +295,100 @@ module Bstr = struct
     match rev with
     | true -> rspan ?min ?max ?sat bstr
     | false -> fspan ?min ?max ?sat bstr
+
+  let ftake ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.ftake";
+    if max < 0 then invalid_arg "Cachet.Bstr.ftake";
+    if min > max || max == 0 then empty
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let max_idx =
+        let k = max - 1 in
+        if k > max_idx then max_idx else k
+      in
+      let need_idx = min in
+      let rec go idx =
+        if idx <= max_idx && sat bstr.{idx} then go (succ idx)
+        else if idx < need_idx || idx == 0 then empty
+        else if idx == len then bstr
+        else sub bstr ~off:0 ~len:idx
+      in
+      go 0
+
+  let rtake ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.rtake";
+    if max < 0 then invalid_arg "Cachet.Bstr.rtake";
+    if min > max || max == 0 then empty
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let min_idx =
+        let k = len - max in
+        if k < 0 then 0 else k
+      in
+      let need_idx = max_idx - min in
+      let rec go idx =
+        if idx >= min_idx && sat bstr.{idx} then go (pred idx)
+        else if idx > need_idx || idx == max_idx then empty
+        else if idx == -1 then bstr
+        else
+          let cut = idx + 1 in
+          sub bstr ~off:cut ~len:(len - cut)
+      in
+      go 0
+
+  let take ?(rev = false) ?min ?max ?sat bstr =
+    match rev with
+    | true -> rtake ?min ?max ?sat bstr
+    | false -> ftake ?min ?max ?sat bstr
+
+  let fdrop ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.fspan";
+    if max < 0 then invalid_arg "Cachet.Bstr.fspan";
+    if min > max || max == 0 then bstr
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let max_idx =
+        let k = max - 1 in
+        if k > max_idx then max_idx else k
+      in
+      let need_idx = min in
+      let rec go idx =
+        if idx <= max_idx && sat bstr.{idx} then go (succ idx)
+        else if idx < need_idx || idx == 0 then bstr
+        else if idx == len then bstr
+        else sub bstr ~off:idx ~len:(len - idx)
+      in
+      go 0
+
+  let rdrop ?(min = 0) ?(max = max_int) ?(sat = Fun.const true) bstr =
+    if min < 0 then invalid_arg "Cachet.Bstr.rspan";
+    if max < 0 then invalid_arg "Cachet.Bstr.rspan";
+    if min > max || max == 0 then bstr
+    else
+      let len = length bstr in
+      let max_idx = len - 1 in
+      let min_idx =
+        let k = len - max in
+        if k < 0 then 0 else k
+      in
+      let need_idx = max_idx - min in
+      let rec go idx =
+        if idx >= min_idx && sat bstr.{idx} then go (pred idx)
+        else if idx > need_idx || idx == max_idx then bstr
+        else if idx == -1 then empty
+        else
+          let cut = idx + 1 in
+          sub bstr ~off:0 ~len:cut
+      in
+      go 0
+
+  let drop ?(rev = false) ?min ?max ?sat bstr =
+    match rev with
+    | true -> rdrop ?min ?max ?sat bstr
+    | false -> fdrop ?min ?max ?sat bstr
 end
 
 external hash : (int32[@unboxed]) -> int -> (int32[@unboxed])

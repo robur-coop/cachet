@@ -173,6 +173,9 @@ module Bstr : sig
       [Fun.const true].
 
       @raise Invalid_argument if [max] or [min] is negative. *)
+
+  val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
+  val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
 end
 
 type slice = private { offset: int; length: int; payload: Bstr.t }
