@@ -281,13 +281,20 @@ val invalidate : 'fd t -> off:int -> len:int -> unit
     8-bit or 16-bit integers represented by [int] values sign-extend (resp.
     zero-extend) their result. *)
 
+exception Out_of_bounds of int
+(** If Cachet tries to retrieve a byte outside the block device, this exception is raised. *)
+
 val get_int8 : 'fd t -> int -> int
 (** [get_int8 t logical_address] is [t]'s signed 8-bit integer starting at byte
-    index [logical_address]. *)
+    index [logical_address].
+
+    @raise Out_of_bounds if [logical_address] is not accessible. *)
 
 val get_uint8 : 'fd t -> int -> int
 (** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at
-    byte index [logical_address]. *)
+    byte index [logical_address].
+    
+    @raise Out_of_bounds if [logical_address] is not accessible. *)
 
 val get_uint16_ne : 'fd t -> int -> int
 val get_uint16_le : 'fd t -> int -> int
@@ -309,8 +316,8 @@ val get_string : 'fd t -> len:int -> int -> string
     You can use {!val:syscalls} to find out how many times [get_string] can
     call [map] at most.
 
-    @raise Failure if the [map] function cannot give us enough to copy [len]
-    bytes. *)
+    @raise Out_of_bounds if [logical_address] and [len] byte(s) are not
+    accessible. *)
 
 val get_seq : 'fd t -> int -> string Seq.t
 val next : 'fd t -> slice -> slice option
