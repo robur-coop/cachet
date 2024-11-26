@@ -441,6 +441,7 @@ type 'fd t = {
 and 'fd map = 'fd -> pos:int -> int -> bigstring
 
 let fd { fd; _ } = fd
+let pagesize { pagesize; _ } = pagesize
 
 let copy t =
   {
@@ -494,6 +495,13 @@ let load t ?(len = 1) logical_address =
       t.metrics.cache_miss <- t.metrics.cache_miss + 1;
       let slice = load t logical_address in
       if slice.length - offset >= len then Some slice else none
+
+let is_cached t logical_address =
+  let page = logical_address lsr t.pagesize in
+  let hash = hash 0l (page lsl t.pagesize) land ((1 lsl t.cachesize) - 1) in
+  match t.arr.(hash) with
+  | Some slice -> slice.offset == page lsl t.pagesize
+  | None -> false
 
 let invalidate t ~off:logical_address ~len =
   if logical_address < 0 || len < 0 then

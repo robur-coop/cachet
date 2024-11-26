@@ -234,6 +234,7 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
 type 'fd t
 
 val fd : 'fd t -> 'fd
+val pagesize : 'fd t -> int
 
 val cache_hit : 'fd t -> int
 (** [cache_hit t] is the number of times a load hit the cache. *)
@@ -261,6 +262,10 @@ val load : 'fd t -> ?len:int -> int -> slice option
 
 val invalidate : 'fd t -> off:int -> len:int -> unit
 (** [invalidate t ~off ~len] invalidates the cache on [len] bytes from [off]. *)
+
+val is_cached : 'fd t -> int -> bool
+(** [is_cached t logical_address] returns [true] if the [logicial_address]
+    requested is available in the cache, otherwise [false]. *)
 
 (** {2:user_friendly User friendly functions.} *)
 
