@@ -1,0 +1,4 @@
+(library
+ (name cachet_lwt)
+ (public_name cachet-lwt)
+ (libraries lwt cachet))
