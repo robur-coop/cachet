@@ -476,6 +476,7 @@ let load t logical_address =
 let none : slice option = None
 let cache_miss t = t.metrics.cache_miss
 let cache_hit t = t.metrics.cache_hit
+let pagesize t = 1 lsl t.pagesize
 
 let load t ?(len = 1) logical_address =
   if len > 1 lsl t.pagesize then

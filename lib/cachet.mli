@@ -21,8 +21,8 @@ module Bstr : sig
   (** [length bstr] is the number of bytes in [bstr]. *)
 
   val get : t -> int -> char
-  (** [get bstr i] is the byte of [bstr]' at index [i]. This is
-      equivalent to the [bstr.{i}] notation. 
+  (** [get bstr i] is the byte of [bstr]' at index [i]. This is equivalent to
+      the [bstr.{i}] notation.
 
       @raise Invalid_argument if [i] is not an index of [bstr]. *)
 
@@ -59,24 +59,24 @@ module Bstr : sig
       starting at byte index [i]. *)
 
   val get_int32_ne : t -> int -> int32
-  (** [get_int32_ne bstr i] is [bstr]'s native-endian 32-bit integer starting
-      at byte index [i]. *)
+  (** [get_int32_ne bstr i] is [bstr]'s native-endian 32-bit integer starting at
+      byte index [i]. *)
 
   val get_int32_le : t -> int -> int32
-  (** [get_int32_le bstr i] is [bstr]'s little-endian 32-bit integer starting
-      at byte index [i]. *)
+  (** [get_int32_le bstr i] is [bstr]'s little-endian 32-bit integer starting at
+      byte index [i]. *)
 
   val get_int32_be : t -> int -> int32
   (** [get_int32_be bstr i] is [bstr]'s big-endian 32-bit integer starting at
       byte index [i]. *)
 
   val get_int64_ne : t -> int -> int64
-  (** [get_int64_ne bstr i] is [bstr]'s native-endian 64-bit integer starting
-      at byte index [i]. *)
+  (** [get_int64_ne bstr i] is [bstr]'s native-endian 64-bit integer starting at
+      byte index [i]. *)
 
   val get_int64_le : t -> int -> int64
-  (** [get_int64_le bstr i] is [bstr]'s little-endian 64-bit integer starting
-      at byte index [i]. *)
+  (** [get_int64_le bstr i] is [bstr]'s little-endian 64-bit integer starting at
+      byte index [i]. *)
 
   val get_int64_be : t -> int -> int64
   (** [get_int64_be bstr i] is [bstr]'s big-endian 64-bit integer starting at
@@ -84,8 +84,7 @@ module Bstr : sig
 
   val sub : t -> off:int -> len:int -> t
   (** [sub bstr ~off ~len] does not allocate a bigstring, but instead returns a
-      new
-      view into [bstr] starting at [off], and with length [len].
+      new view into [bstr] starting at [off], and with length [len].
 
       {b Note} that this does not allocate a new buffer, but instead shares the
       buffer of [bstr] with the newly-returned bigstring. *)
@@ -95,8 +94,8 @@ module Bstr : sig
       the bytes of [t] starting at [off]. *)
 
   val to_string : t -> string
-  (** [to_string bstr] is equivalent to [sub_string bstr ~off:0 ~len:(length
-      bstr)]. *)
+  (** [to_string bstr] is equivalent to
+      [sub_string bstr ~off:0 ~len:(length bstr)]. *)
 
   val blit_to_bytes :
     t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
@@ -104,9 +103,9 @@ module Bstr : sig
       [src], starting at index [src_off], to byte sequence [dst], starting at
       index [dst_off].
 
-      @raise Invalid_argument if [src_off] and [len] do not designate a valid
-      range of [src], or if [dst_off] and [len] do not designate a valid range
-      of [dst]. *)
+      @raise Invalid_argument
+        if [src_off] and [len] do not designate a valid range of [src], or if
+        [dst_off] and [len] do not designate a valid range of [dst]. *)
 
   val is_empty : t -> bool
   (** [is_empty bstr] is [length bstr = 0]. *)
@@ -117,8 +116,8 @@ module Bstr : sig
 
   val is_infix : affix:string -> t -> bool
   (** [is_infix ~affix bstr] is [true] iff there exists an index [j] in [bstr]
-      such that for all indices [i] of [affix] we have [affix.[i] = bstr.{j +
-      i}]. *)
+      such that for all indices [i] of [affix] we have
+      [affix.[i] = bstr.{j + i}]. *)
 
   val is_suffix : affix:string -> t -> bool
   (** [is_suffix ~affix bstr] is [true] iff [affix.[n - idx] = bstr.{m - idx}]
@@ -126,8 +125,8 @@ module Bstr : sig
       [m = length bstr - 1]. *)
 
   val for_all : (char -> bool) -> t -> bool
-  (** [for_all p bstr] is [true] iff for all indices [idx] of [bstr], [p
-      bstr.{idx} = true]. *)
+  (** [for_all p bstr] is [true] iff for all indices [idx] of [bstr],
+      [p bstr.{idx} = true]. *)
 
   val exists : (char -> bool) -> t -> bool
   (** [exists p bstr] is [true] iff there exists an index [idx] of [bstr] with
@@ -153,19 +152,18 @@ module Bstr : sig
       the interval is empty and the empty bigstring is returned. *)
 
   val trim : ?drop:(char -> bool) -> t -> t
-  (** [trim ~drop bstr] is [bstr] with prefix and suffix bytes satisfying
-      [drop] in [bstr] removed. [drop] defaults to [fun chr -> chr = ' ']. *)
+  (** [trim ~drop bstr] is [bstr] with prefix and suffix bytes satisfying [drop]
+      in [bstr] removed. [drop] defaults to [fun chr -> chr = ' ']. *)
 
   val span :
     ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t * t
   (** [span ~rev ~min ~max ~sat bstr] is [(l, r)] where:
-      {ul
-      {- if [rev] is [false] (default), [l] is at least [min] and at most [max]
-         consecutive [sat] satisfying initial bytes of [bstr] or {!empty} if
-         there are no such bytes. [r] are the remaining bytes of [bstr].}
-      {- if [rev] is [true], [r] is at least [min] and at most [max]
-         consecutive [sat] satisfying final bytes of [bstr] or {!empty} if there
-         are no such bytes. [l] are the remaining bytes of [bstr].}}
+      - if [rev] is [false] (default), [l] is at least [min] and at most [max]
+        consecutive [sat] satisfying initial bytes of [bstr] or {!empty} if
+        there are no such bytes. [r] are the remaining bytes of [bstr].
+      - if [rev] is [true], [r] is at least [min] and at most [max] consecutive
+        [sat] satisfying final bytes of [bstr] or {!empty} if there are no such
+        bytes. [l] are the remaining bytes of [bstr].
 
       If [max] is unspecified the span is unlimited. If [min] is unspecified it
       defaults to [0]. If [min > max] the condition can't be satisfied and the
@@ -190,9 +188,9 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
 (** A value [map : 'fd map] when applied [map fd ~pos len] reads a
     {!type:bigstring} at [pos]. [map] must return as much data as is available,
     though never more than [len] bytes. [map] never fails. Instead, an empty
-    [bigstring] must be returned if e.g. the position is out of range.
-    Depending on how the cache is configured (see {!val:make}), [map] never
-    read more than [pagesize] bytes. *)
+    [bigstring] must be returned if e.g. the position is out of range. Depending
+    on how the cache is configured (see {!val:make}), [map] never read more than
+    [pagesize] bytes. *)
 
 (** {2 Note about schedulers and [Cachet].}
 
@@ -206,15 +204,15 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
     {!val:load} or the {{!user_friendly} user-friendly functions}.
 
     These functions can read one or more pages. {!val:load} reads one page at
-    most. 
+    most.
 
     {2 Note about large file and [Cachet].}
 
     For performance reasons, Cachet has chosen to use an [int] rather than an
     [int64] for the offset (the logical address). On a 64-bit architecture,
-    addressing in the block device should not be a problem and Cachet is able
-    to manage large block devices. However, on a 32-bit architecture, Cachet
-    should only be able to handle ~2 GB files.
+    addressing in the block device should not be a problem and Cachet is able to
+    manage large block devices. However, on a 32-bit architecture, Cachet should
+    only be able to handle ~2 GB files.
 
     We consider that it is up to the developer to check this:
     {[
@@ -241,6 +239,8 @@ val cache_hit : 'fd t -> int
 val cache_miss : 'fd t -> int
 (** [cache_miss t] is the number of times a load didn't hit the cache. *)
 
+val pagesize : 'fd t -> int
+
 val copy : 'fd t -> 'fd t
 (** [copy t] creates a new, empty cache using the same [map] function. *)
 
@@ -248,16 +248,16 @@ val make : ?cachesize:int -> ?pagesize:int -> map:'fd map -> 'fd -> 'fd t
 (** [make ~cachesize ~pagesize ~map fd] creates a new, empty cache using [map]
     and [fd] for reading [pagesize] bytes. The size of the cache is [cachesize].
 
-    @raise Invalid_argument if either [cachesize] or [pagesize] is not a power
-    of two. *)
+    @raise Invalid_argument
+      if either [cachesize] or [pagesize] is not a power of two. *)
 
 val load : 'fd t -> ?len:int -> int -> slice option
 (** [load t ~len logical_address] loads a page at the given [logical_address]
-    and returns a {!type:slice}. [len] (defaults to [1]) is the expected
-    minimum number of bytes returned.
+    and returns a {!type:slice}. [len] (defaults to [1]) is the expected minimum
+    number of bytes returned.
 
-    If the slice does not contains, at least, [len] bytes, [load] returns [None].
-    [load t ~len:0 logical_address] always returns an empty slice. *)
+    If the slice does not contains, at least, [len] bytes, [load] returns
+    [None]. [load t ~len:0 logical_address] always returns an empty slice. *)
 
 val invalidate : 'fd t -> off:int -> len:int -> unit
 (** [invalidate t ~off ~len] invalidates the cache on [len] bytes from [off]. *)
@@ -282,7 +282,8 @@ val invalidate : 'fd t -> off:int -> len:int -> unit
     zero-extend) their result. *)
 
 exception Out_of_bounds of int
-(** If Cachet tries to retrieve a byte outside the block device, this exception is raised. *)
+(** If Cachet tries to retrieve a byte outside the block device, this exception
+    is raised. *)
 
 val get_int8 : 'fd t -> int -> int
 (** [get_int8 t logical_address] is [t]'s signed 8-bit integer starting at byte
@@ -293,7 +294,7 @@ val get_int8 : 'fd t -> int -> int
 val get_uint8 : 'fd t -> int -> int
 (** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at
     byte index [logical_address].
-    
+
     @raise Out_of_bounds if [logical_address] is not accessible. *)
 
 val get_uint16_ne : 'fd t -> int -> int
@@ -313,11 +314,11 @@ val get_string : 'fd t -> len:int -> int -> string
 (** [get_string t ~len logical_address] loads the various pages needed from the
     cache or using [map] to copy [len] bytes available at [off].
 
-    You can use {!val:syscalls} to find out how many times [get_string] can
-    call [map] at most.
+    You can use {!val:syscalls} to find out how many times [get_string] can call
+    [map] at most.
 
-    @raise Out_of_bounds if [logical_address] and [len] byte(s) are not
-    accessible. *)
+    @raise Out_of_bounds
+      if [logical_address] and [len] byte(s) are not accessible. *)
 
 val get_seq : 'fd t -> int -> string Seq.t
 val next : 'fd t -> slice -> slice option
@@ -325,17 +326,17 @@ val iter : 'fd t -> ?len:int -> fn:(int -> unit) -> int -> unit
 
 val blit_to_bytes :
   'fd t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
-(** [blit_to_bytes t ~src_off dst ~dst_off ~len] copies [len] bytes from
-    the cached {i block-device} represented by [t], starting at index [src_off]
-    as the logical address, to byte sequence [dst], starting at index
-    [dst_off].
+(** [blit_to_bytes t ~src_off dst ~dst_off ~len] copies [len] bytes from the
+    cached {i block-device} represented by [t], starting at index [src_off] as
+    the logical address, to byte sequence [dst], starting at index [dst_off].
 
     This function can read several pages depending on the size of the [dst]
     buffer.
 
-    @raise Invalid_argument if [src_off] and [len] do not designate a valid
-    range of the {i block-device}, or if [dst_off] and [len] do not designate a
-    valid range of [dst]. *)
+    @raise Invalid_argument
+      if [src_off] and [len] do not designate a valid range of the
+      {i block-device}, or if [dst_off] and [len] do not designate a valid range
+      of [dst]. *)
 
 val syscalls : 'fd t -> logical_address:int -> len:int -> int
 (** [syscalls t ~logicial_address ~len] returns the maximum number (if the cache
