@@ -240,8 +240,6 @@ val cache_hit : 'fd t -> int
 val cache_miss : 'fd t -> int
 (** [cache_miss t] is the number of times a load didn't hit the cache. *)
 
-val pagesize : 'fd t -> int
-
 val copy : 'fd t -> 'fd t
 (** [copy t] creates a new, empty cache using the same [map] function. *)
 

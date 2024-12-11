@@ -21,7 +21,7 @@ val get_int8 : 'fd Cachet.t -> int -> int Lwt.t
 val get_uint8 : 'fd Cachet.t -> int -> int Lwt.t
 (** [get_uint8 t logical_address] is [t]'s unsigned 8-bit integer starting at
     byte index [logical_address].
-    
+
     @raise Out_of_bounds if [logical_address] is not accessible. *)
 
 val get_uint16_ne : 'fd Cachet.t -> int -> int Lwt.t

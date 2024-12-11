@@ -20,8 +20,8 @@ let blit_to_bytes t ~src_off:logical_address buf ~dst_off ~len =
   if len < 0 || dst_off < 0 || dst_off > Bytes.length buf - len then
     invalid_arg "Cachet_lwt.blit_to_bytes";
   let pagesize = Cachet.pagesize t in
-  let off = logical_address land ((1 lsl pagesize) - 1) in
-  if is_aligned off && (1 lsl pagesize) - off >= len then
+  let off = logical_address land (pagesize - 1) in
+  if is_aligned off && pagesize - off >= len then
     load t ~len logical_address >|= function
     | None -> out_of_bounds logical_address
     | Some slice ->
