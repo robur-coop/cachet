@@ -1,3 +1,5 @@
 (test
  (name test)
+ (enabled_if %{arch_sixtyfour})
+ ; error on arm32/x86_32, libcachet_stubs.so not found
  (libraries cachet alcotest))
