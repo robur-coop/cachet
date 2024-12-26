@@ -173,7 +173,20 @@ module Bstr : sig
       @raise Invalid_argument if [max] or [min] is negative. *)
 
   val take : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
+  (** [take ~rev ~min ~max ~sat bstr] is the matching span of {!span} without
+      the remaining one. In other words:
+
+      {[
+        (if rev then snd else fst) @@ span ~rev ~min ~max ~sat bstr
+      ]} *)
+
   val drop : ?rev:bool -> ?min:int -> ?max:int -> ?sat:(char -> bool) -> t -> t
+  (** [drop ~rev ~min ~max ~sat bstr] is the remaining span of {!span} without
+      the matching span. In other words:
+
+      {[
+        (if rev then fst else snd) @@ span ~rev ~min ~max ~sat bstr
+      ]} *)
 end
 
 type slice = private { offset: int; length: int; payload: Bstr.t }
@@ -182,7 +195,15 @@ type slice = private { offset: int; length: int; payload: Bstr.t }
     underlying {i block-device} and size. *)
 
 val pp_slice : Format.formatter -> slice -> unit
+(** Pretty-printer of {!type:slice}s. *)
+
 val bstr_of_slice : ?logical_address:int -> slice -> Bstr.t
+(** [bstr_of_slice ?logical_address slice] returns a read-only {i bigstring}
+    according the given [slice] and optionnaly the [logical_address].
+
+    @raise Invalid_argument
+      if the given [logical_address] does not correspond to the given [slice].
+*)
 
 type 'fd map = 'fd -> pos:int -> int -> bigstring
 (** A value [map : 'fd map] when applied [map fd ~pos len] reads a
@@ -230,9 +251,14 @@ type 'fd map = 'fd -> pos:int -> int -> bigstring
     program can handle large block-devices. *)
 
 type 'fd t
+(** Type of cachet's values. *)
 
 val fd : 'fd t -> 'fd
+(** [fd t] is the abstract {i file-descriptor} used by [t] (and specified on
+    {!make}). *)
+
 val pagesize : 'fd t -> int
+(** [pagesize t] is the {i page-size} used by [t] (and specified on {!make}). *)
 
 val cache_hit : 'fd t -> int
 (** [cache_hit t] is the number of times a load hit the cache. *)
@@ -301,17 +327,52 @@ val get_uint8 : 'fd t -> int -> int
     @raise Out_of_bounds if [logical_address] is not accessible. *)
 
 val get_uint16_ne : 'fd t -> int -> int
+(** [get_uint16_ne t i] is [t]'s native-endian unsigned 16-bit integer starting
+    at byte index [i]. *)
+
 val get_uint16_le : 'fd t -> int -> int
+(** [get_uint16_le t i] is [t]'s little-endian unsigned 16-bit integer starting
+    at byte index [i]. *)
+
 val get_uint16_be : 'fd t -> int -> int
+(** [get_uint16_be t i] is [t]'s big-endian unsigned 16-bit integer starting at
+    byte index [i]. *)
+
 val get_int16_ne : 'fd t -> int -> int
+(** [get_int16_be t i] is [t]'s native-endian signed 16-bit integer starting at
+    byte index [i]. *)
+
 val get_int16_le : 'fd t -> int -> int
+(** [get_int16_le t i] is [t]'s little-endian signed 16-bit integer starting at
+    byte index [i]. *)
+
 val get_int16_be : 'fd t -> int -> int
+(** [get_int16_be t i] is [t]'s big-endian signed 16-bit integer starting at
+    byte index [i]. *)
+
 val get_int32_ne : 'fd t -> int -> int32
+(** [get_int32_ne t i] is [t]'s native-endian 32-bit integer starting at byte
+    index [i]. *)
+
 val get_int32_le : 'fd t -> int -> int32
+(** [get_int32_le t i] is [t]'s little-endian 32-bit integer starting at byte
+    index [i]. *)
+
 val get_int32_be : 'fd t -> int -> int32
+(** [get_int32_be t i] is [t]'s big-endian 32-bit integer starting at byte index
+    [i]. *)
+
 val get_int64_ne : 'fd t -> int -> int64
+(** [get_int64_ne t i] is [t]'s native-endian 64-bit integer starting at byte
+    index [i]. *)
+
 val get_int64_le : 'fd t -> int -> int64
+(** [get_int64_le t i] is [t]'s little-endian 64-bit integer starting at byte
+    index [i]. *)
+
 val get_int64_be : 'fd t -> int -> int64
+(** [get_int64_be t i] is [t]'s big-endian 64-bit integer starting at byte index
+    [i]. *)
 
 val get_string : 'fd t -> len:int -> int -> string
 (** [get_string t ~len logical_address] loads the various pages needed from the
@@ -324,8 +385,16 @@ val get_string : 'fd t -> len:int -> int -> string
       if [logical_address] and [len] byte(s) are not accessible. *)
 
 val get_seq : 'fd t -> int -> string Seq.t
+(** [get_seq t off] returns a [string Seq.t] which loads various pages until the
+    end of the underlying {i block-device} and starting at [off]. *)
+
 val next : 'fd t -> slice -> slice option
+(** [next t slice] returns the next slice from the {i block-device} after the
+    given one [slice]. *)
+
 val iter : 'fd t -> ?len:int -> fn:(int -> unit) -> int -> unit
+(** [iter t ?len ~fn off] iters on each bytes until [len] (or the end of the
+    {i block-device} if it's not specified and starting at [off]. *)
 
 val blit_to_bytes :
   'fd t -> src_off:int -> bytes -> dst_off:int -> len:int -> unit
