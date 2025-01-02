@@ -478,6 +478,39 @@ let none : slice option = None
 let cache_miss t = t.metrics.cache_miss
 let cache_hit t = t.metrics.cache_hit
 
+let map ({ fd; map; _ } as t) ~pos:logical_address logical_len =
+  let page = logical_address lsr t.pagesize in
+  let pos = page lsl t.pagesize in
+  (* round-down *)
+  let rem = logical_address - pos in
+  let len = rem + logical_len in
+  let len =
+    (* round-up *)
+    if ((1 lsl t.pagesize) - 1) land len != 0 then
+      (len + (1 lsl t.pagesize)) land lnot ((1 lsl t.pagesize) - 1)
+    else len
+  in
+  let off = logical_address land ((t.pagesize lsl 1) - 1) in
+  if len <= 1 lsl t.pagesize then begin
+    let hash = hash 0l (page lsl t.pagesize) land ((1 lsl t.cachesize) - 1) in
+    match t.arr.(hash) with
+    | Some { offset; length; payload } when offset == page lsl t.pagesize ->
+        t.metrics.cache_hit <- t.metrics.cache_hit + 1;
+        let len = Int.min (length - off) logical_len in
+        Bigarray.Array1.sub payload off len
+    | Some _ | None ->
+        t.metrics.cache_miss <- t.metrics.cache_miss + 1;
+        let { length; payload; _ } = load t logical_address in
+        let len = Int.min (length - off) logical_len in
+        Bigarray.Array1.sub payload off len
+  end
+  else begin
+    t.metrics.cache_miss <- t.metrics.cache_miss + 1;
+    let bstr = map fd ~pos len in
+    let len = Int.min (Bigarray.Array1.dim bstr - off) logical_len in
+    Bigarray.Array1.sub bstr off len
+  end
+
 let load t ?(len = 1) logical_address =
   if len > 1 lsl t.pagesize then
     invalid_arg "Cachet.load: you can not load more than a page";

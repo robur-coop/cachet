@@ -36,6 +36,14 @@ let test01 =
   let b = Cachet.Bstr.to_string oracle in
   let a = List.of_seq a in
   let a = String.concat "" a in
-  Alcotest.(check string) "all" a b
+  Alcotest.(check string) "all" a b;
+  let a = Cachet.map t ~pos:2 (0x100 - 2) in
+  let a = Cachet.Bstr.to_string a in
+  let b = Cachet.Bstr.sub_string oracle ~off:2 ~len:(0x100 - 2) in
+  Alcotest.(check string) "map (round down)" a b;
+  let a = Cachet.map t ~pos:2 0x100 in
+  let a = Cachet.Bstr.to_string a in
+  let b = Cachet.Bstr.sub_string oracle ~off:2 ~len:0x100 in
+  Alcotest.(check string) "map (round up)" a b
 
 let () = Alcotest.run "cachet" [ ("simple", [ test01 ]) ]
