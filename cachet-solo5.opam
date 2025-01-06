@@ -22,3 +22,4 @@ depends: [
   "mirage-solo5" {>= "0.7.0"}
   "alcotest"     {with-test & >= "1.8.0"}
 ]
+x-maintenance-intent: [ "(latest)" ]
