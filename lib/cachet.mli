@@ -260,6 +260,18 @@ val fd : 'fd t -> 'fd
 val pagesize : 'fd t -> int
 (** [pagesize t] is the {i page-size} used by [t] (and specified on {!make}). *)
 
+val map : 'fd t -> pos:int -> int -> Bstr.t
+(** [map t ~pos len] returns a {!type:Bstr.t} which corresponds to a slice of
+    the {i block-device}. If this slice is smaller than or equal to a
+    {!val:pagesize}, the cache system is used to obtain the page and apply
+    {!val:Bstr.sub} to it (in other words, only a small allocation is made).
+    Otherwise, the {i syscall} {!type:map} is used.
+
+    Regardless of the expected position [pos] or size [len], this function will
+    call the {i syscall} {!type:map} as the last analysis, with a position
+    aligned with the {!val:pagesize} and a size aligned with the
+    {!val:pagesize}. *)
+
 val cache_hit : 'fd t -> int
 (** [cache_hit t] is the number of times a load hit the cache. *)
 
