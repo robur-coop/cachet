@@ -391,6 +391,11 @@ module Bstr = struct
     match rev with
     | true -> rdrop ?min ?max ?sat bstr
     | false -> fdrop ?min ?max ?sat bstr
+
+  let shift bstr off =
+    if off > length bstr then invalid_arg "Cachet.Bstr.shift";
+    let len = length bstr - off in
+    Bigarray.Array1.sub bstr off len
 end
 
 external hash : (int32[@unboxed]) -> int -> (int32[@unboxed])

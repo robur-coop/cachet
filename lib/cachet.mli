@@ -187,6 +187,9 @@ module Bstr : sig
       {[
         (if rev then fst else snd) @@ span ~rev ~min ~max ~sat bstr
       ]} *)
+
+  val shift : t -> int -> t
+  (** [shift bstr n] is [sub bstr n (length bstr - n)]. *)
 end
 
 type slice = private { offset: int; length: int; payload: Bstr.t }
