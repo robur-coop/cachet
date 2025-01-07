@@ -94,4 +94,4 @@ let get_int64_be t logical_address =
 
 let next t slice =
   let pagesize = Cachet.pagesize t in
-  load t (slice.Cachet.offset + (1 lsl pagesize))
+  load t (slice.Cachet.offset + pagesize)
