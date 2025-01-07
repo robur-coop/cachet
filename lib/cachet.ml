@@ -490,7 +490,7 @@ let map ({ fd; map; _ } as t) ~pos:logical_address logical_len =
       (len + (1 lsl t.pagesize)) land lnot ((1 lsl t.pagesize) - 1)
     else len
   in
-  let off = logical_address land ((t.pagesize lsl 1) - 1) in
+  let off = logical_address land ((1 lsl t.pagesize) - 1) in
   if len <= 1 lsl t.pagesize then begin
     let hash = hash 0l (page lsl t.pagesize) land ((1 lsl t.cachesize) - 1) in
     match t.arr.(hash) with
