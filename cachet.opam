@@ -20,3 +20,4 @@ depends: [
   "dune"        {>= "3.5.0"}
   "alcotest"    {with-test & >= "1.7.0"}
 ]
+x-maintenance-intent: [ "(latest)" ]
