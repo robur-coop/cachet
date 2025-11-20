@@ -1,21 +1,20 @@
-type bigstring =
-  (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
-
-val memcpy :
-  bigstring -> src_off:int -> bigstring -> dst_off:int -> len:int -> unit
-
-val memmove :
-  bigstring -> src_off:int -> bigstring -> dst_off:int -> len:int -> unit
+type 'fd map = 'fd -> pos:int -> int -> Bstr.t
+(** A value [map : 'fd map] when applied [map fd ~pos len] reads a
+    {!type:bigstring} at [pos]. [map] must return as much data as is available,
+    though never more than [len] bytes. [map] never fails. Instead, an empty
+    [bigstring] must be returned if e.g. the position is out of range. Depending
+    on how the cache is configured (see {!val:make}), [map] never read more than
+    [pagesize] bytes. *)
 
 module Bstr : sig
   (** A read-only bigstring. *)
 
-  type t = private bigstring
+  type t = private Bstr.t
 
   val empty : t
   (** [empty] is an empty bigstring. *)
 
-  val of_bigstring : bigstring -> t
+  val of_bigstring : Bstr.t -> t
 
   val length : t -> int
   (** [length bstr] is the number of bytes in [bstr]. *)
@@ -207,14 +206,6 @@ val bstr_of_slice : ?logical_address:int -> slice -> Bstr.t
     @raise Invalid_argument
       if the given [logical_address] does not correspond to the given [slice].
 *)
-
-type 'fd map = 'fd -> pos:int -> int -> bigstring
-(** A value [map : 'fd map] when applied [map fd ~pos len] reads a
-    {!type:bigstring} at [pos]. [map] must return as much data as is available,
-    though never more than [len] bytes. [map] never fails. Instead, an empty
-    [bigstring] must be returned if e.g. the position is out of range. Depending
-    on how the cache is configured (see {!val:make}), [map] never read more than
-    [pagesize] bytes. *)
 
 (** {2 Note about schedulers and [Cachet].}
 

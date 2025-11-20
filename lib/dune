@@ -9,4 +9,5 @@
   (language c)
   (mode native)
   (names stub))
- (modules cachet))
+ (modules cachet)
+ (libraries bstr))
