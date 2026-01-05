@@ -1,0 +1,10 @@
+(executable
+ (name fuzz)
+ (ocamlopt_flags
+  (:standard -afl-instrument))
+ (libraries hxd.core hxd.string logs.fmt fmt.tty fmt ohex cachet.wr crowbar))
+
+(rule
+ (alias runtest)
+ (action
+  (run ./fuzz.exe)))

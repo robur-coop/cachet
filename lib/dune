@@ -11,3 +11,9 @@
   (names stub))
  (modules cachet)
  (libraries bstr))
+
+(library
+ (name cachet_wr)
+ (public_name cachet.wr)
+ (modules cachet_wr diet dllist)
+ (libraries fmt cachet bstr))

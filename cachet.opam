@@ -20,5 +20,10 @@ depends: [
   "dune"        {>= "3.5.0"}
   "bstr"
   "alcotest"    {with-test & >= "1.7.0"}
+  "crowbar"     {with-test}
+  "hxd"         {with-test}
+  "ohex"        {with-test}
+  "logs"        {with-test}
+  "fmt"         {with-test}
 ]
 x-maintenance-intent: [ "(latest)" ]

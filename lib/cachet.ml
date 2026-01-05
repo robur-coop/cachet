@@ -175,7 +175,7 @@ let invalidate t ~off:logical_address ~len =
     t.arr.(hash 0l (i lsl t.pagesize) land mask) <- None
   done
 
-let is_aligned x = x land ((1 lsl 2) - 1) == 0
+let is_aligned_4 x = x land ((1 lsl 2) - 1) == 0
 
 exception Out_of_bounds of int
 
@@ -195,7 +195,7 @@ let blit_to_bytes t ~src_off:logical_address buf ~dst_off ~len =
   if len < 0 || dst_off < 0 || dst_off > Bytes.length buf - len then
     invalid_arg "Cachet.blit_to_bytes";
   let off = logical_address land ((1 lsl t.pagesize) - 1) in
-  if is_aligned off && (1 lsl t.pagesize) - off >= len then begin
+  if is_aligned_4 off && (1 lsl t.pagesize) - off >= len then begin
     match load t ~len logical_address with
     | None -> out_of_bounds logical_address
     | Some slice ->
