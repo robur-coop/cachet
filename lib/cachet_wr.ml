@@ -149,8 +149,6 @@ let set : type a. 'fd t -> int -> a v -> a -> unit =
   t.areas <- Diet.add off (off + len) t.areas;
   Dllist.add (off, Value (k, v)) t.pipeline
 
-let is_aligned_4 x = x land ((1 lsl 2) - 1) == 0
-
 let persist t off bstrs (Value (k, v)) =
   let str = value_to_string k v in
   let rec go src_off off =
@@ -270,3 +268,34 @@ let commit t =
         Cachet.invalidate t.cache ~off ~len
       in
       List.iter fn (p :: ps)
+
+let get_uint8 t off = get t off (Vi8 Unsigned)
+let get_int8 t off = get t off (Vi8 Signed)
+let get_uint16_ne t off = get t off (Vi16 (Unsigned, Ne))
+let get_uint16_le t off = get t off (Vi16 (Unsigned, Le))
+let get_uint16_be t off = get t off (Vi16 (Unsigned, Be))
+let get_int16_ne t off = get t off (Vi16 (Signed, Ne))
+let get_int16_le t off = get t off (Vi16 (Signed, Le))
+let get_int16_be t off = get t off (Vi16 (Signed, Be))
+let get_int32_ne t off = get t off (Vi32 Ne)
+let get_int32_le t off = get t off (Vi32 Le)
+let get_int32_be t off = get t off (Vi32 Be)
+let get_int64_ne t off = get t off (Vi64 Ne)
+let get_int64_le t off = get t off (Vi64 Le)
+let get_int64_be t off = get t off (Vi64 Be)
+let get_int128 t off = get t off Vi128
+let set_int8 t off v = set t off (Vi8 Signed) v
+let set_uint8 t off v = set t off (Vi8 Unsigned) v
+let set_uint16_ne t off v = set t off (Vi16 (Unsigned, Ne)) v
+let set_uint16_le t off v = set t off (Vi16 (Unsigned, Le)) v
+let set_uint16_be t off v = set t off (Vi16 (Unsigned, Be)) v
+let set_int16_ne t off v = set t off (Vi16 (Signed, Ne)) v
+let set_int16_le t off v = set t off (Vi16 (Signed, Le)) v
+let set_int16_be t off v = set t off (Vi16 (Signed, Be)) v
+let set_int32_ne t off v = set t off (Vi32 Ne) v
+let set_int32_le t off v = set t off (Vi32 Le) v
+let set_int32_be t off v = set t off (Vi32 Be) v
+let set_int64_ne t off v = set t off (Vi64 Ne) v
+let set_int64_le t off v = set t off (Vi64 Le) v
+let set_int64_be t off v = set t off (Vi64 Be) v
+let set_int128 t off v = set t off Vi128 v
