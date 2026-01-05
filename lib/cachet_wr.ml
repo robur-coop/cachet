@@ -153,17 +153,17 @@ let is_aligned_4 x = x land ((1 lsl 2) - 1) == 0
 
 let persist t off bstrs (Value (k, v)) =
   let str = value_to_string k v in
-  let rec go str_off off =
-    if str_off < String.length str then
+  let rec go src_off off =
+    if src_off < String.length str then
       let idx = off lsr t.pagesize in
-      let roff = off lsl t.pagesize in
-      if idx < Array.length bstrs then (
-        let a = (1 lsl t.pagesize) - off in
-        let b = String.length str - off in
-        let len = Int.min a b in
-        Bstr.blit_from_string str ~src_off:str_off bstrs.(idx) ~dst_off:roff
-          ~len;
-        go (str_off + len) (off + len))
+      let dst_off = off land ((1 lsl t.pagesize) - 1) in
+      if idx < Array.length bstrs then begin
+        let rem_in_page = (1 lsl t.pagesize) - dst_off in
+        let rem_in_str = String.length str - src_off in
+        let len = Int.min rem_in_page rem_in_str in
+        Bstr.blit_from_string str ~src_off bstrs.(idx) ~dst_off ~len;
+        go (src_off + len) (off + len)
+      end
   in
   go 0 off
 
@@ -182,8 +182,7 @@ let persist t ~off ~len =
     if off' >= off && off' + 1 <= off + len then
       persist t (off' - physical_address) bstrs value
   in
-  Dllist.iter fn t.pipeline;
-  assert false
+  Dllist.iter fn t.pipeline
 
 (* [commit] is a little complex because the pages we want to update do not
    necessarily follow each other. We therefore use a [hashtbl] to keep the
