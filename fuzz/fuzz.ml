@@ -116,7 +116,12 @@ let get max =
   | 14 -> Get (off, Vi128)
   | _ -> assert false
 
-let t max = choose [ get max; set max ]
+let persist max =
+  map [ range ~min:0 max; range ~min:0 32 ] @@ fun off pad ->
+  let len = pad * 2 in
+  if off + len >= max then bad_test () else Persist { off; len }
+
+let t max = choose [ get max; set max; persist max ]
 
 let on_bytes max actions =
   let buf = Bytes.make (max + 16) '\000' in
@@ -229,7 +234,9 @@ let on_cachet ?(pagesize = 1 lsl 12) max actions =
     | Get (offset, k) ->
         let v = Cachet_wr.get t offset k in
         Value (k, v) :: acc
-    | Persist _ -> acc
+    | Persist { off; len } ->
+        Cachet_wr.persist t ~off ~len;
+        acc
     | Set (off, k, v) -> Cachet_wr.set t off k v; acc
   in
   let results = List.fold_left fn [] actions in
