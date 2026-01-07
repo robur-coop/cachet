@@ -199,7 +199,7 @@ let blit_to_bytes t ~src_off:logical_address buf ~dst_off ~len =
     match load t ~len logical_address with
     | None -> out_of_bounds logical_address
     | Some slice ->
-        Bstr.blit_to_bytes slice.payload ~src_off:off buf ~dst_off:0 ~len
+        Bstr.blit_to_bytes slice.payload ~src_off:off buf ~dst_off ~len
   end
   else
     for i = 0 to len - 1 do
