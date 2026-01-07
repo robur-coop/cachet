@@ -219,6 +219,7 @@ let on_bytes max actions =
 
 let on_cachet ?(pagesize = 1 lsl 12) max actions =
   let len = (max + 16 + (pagesize - 1)) land lnot (pagesize - 1) in
+  let number_of_pages = len / pagesize in
   let bstr = Bstr.make len '\000' in
   let map bstr ~pos len = Bstr.sub bstr ~off:pos ~len in
   let writev dst ~pos:dst_off srcs =
@@ -229,7 +230,7 @@ let on_cachet ?(pagesize = 1 lsl 12) max actions =
     in
     List.iter fn srcs
   in
-  let t = Cachet_wr.make ~pagesize ~map ~writev bstr in
+  let t = Cachet_wr.make ~pagesize ~map ~writev ~number_of_pages bstr in
   let fn acc = function
     | Get (offset, k) ->
         let v = Cachet_wr.get t offset k in
@@ -247,7 +248,7 @@ let pp_hexdump = Hxd_string.pp Hxd.default
 
 let () =
   add_test ~name:"cachet.wr" [ list1 (t 0x100) ] @@ fun ts ->
-  (* Fmt.epr "$> @[<hov>%a@]\n%!" Fmt.(Dump.list pp) ts; *)
+  (* Fmt.epr "$> @[<hov>%a@]\n%!" Fmt.(Dump.list _pp) ts; *)
   let res0, str0 = on_bytes 0x100 ts in
   let res1, str1 = on_cachet ~pagesize:(1 lsl 6) 0x100 ts in
   List.iter2 (check_eq ~pp:pp_value) res0 res1;
