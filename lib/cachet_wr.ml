@@ -69,6 +69,7 @@ type 'fd t = {
   ; pipeline: (int * value) Dllist.t
   ; mutable areas: Diet.t
   ; fd: 'fd
+  ; number_of_pages: int
   ; map: 'fd Cachet.map
   ; writev: 'fd writev
 }
@@ -83,12 +84,12 @@ let unsafe_ctz n =
   done;
   !r
 
-let make ?cachesize ?(pagesize = 1 lsl 12) ~map ~writev fd =
+let make ?cachesize ?(pagesize = 1 lsl 12) ~map ~writev ~number_of_pages fd =
   let cache = Cachet.make ?cachesize ~pagesize ~map fd in
   let pipeline = Dllist.create () in
   let pagesize = unsafe_ctz pagesize in
   let areas = Diet.empty in
-  { cache; pagesize; pipeline; areas; fd; map; writev }
+  { cache; pagesize; pipeline; areas; fd; number_of_pages; map; writev }
 
 let unroll : type a. 'fd t -> at:int -> a v -> a =
  fun t ~at k ->
@@ -98,9 +99,10 @@ let unroll : type a. 'fd t -> at:int -> a v -> a =
   let a = at - 16 and b = at + 16 in
   let fn node =
     let at', Value (k, v) = Dllist.data node in
-    if at' >= a && at' < b then
+    if at' >= a && at' < b then begin
       let roff = if at' >= at then 16 + (at' - at) else 16 - (at - at') in
       unsafe_value_into_bytes ~off:roff buf k v
+    end
   in
   Dllist.iter fn t.pipeline;
   match k with
@@ -165,22 +167,63 @@ let persist t off bstrs (Value (k, v)) =
   in
   go 0 off
 
+module Interval = struct
+  type t = Inclusion | Overlap | Disjoint
+
+  let compare (x, y) (u, v) =
+    if (x >= u && y <= v) || (u >= x && v <= y) then Inclusion
+    else if y < u || x > v then Disjoint
+    else Overlap
+end
+
+(* XXX(dinosaure): to resolve the memory consistency issue between our writes
+   and what we want to persist, we must start from the interval we want to
+   persist and "enlarge" it based on the intervals we have updated so that the
+   overlaps are also taken into account according to their order in our
+   pipeline.
+
+   This mainly means that a [persist] can be larger than that requested by the
+   user if there are overlaps. Normally, in a "normal" use case, the user
+   should not overlap writes so often. I hate intervals... *)
+let area t i0 =
+  let fn ((u, v) as i1) ((x, y) as i0) =
+    match Interval.compare i0 i1 with
+    | Disjoint -> i0
+    | Inclusion | Overlap ->
+        let a = Int.min x u in
+        let b = Int.max y v in
+        (a, b)
+  in
+  Diet.fold fn t.areas i0
+
 let persist t ~off ~len =
+  let off, off_len = area t (off, off + len) in
+  let len = off_len - off in
   let p0 = off lsr t.pagesize in
-  let p1 = (off + len) lsr t.pagesize in
-  let number_of_pages = Int.max 1 (p1 - p0) in
+  let p1 = Int.min ((off + len) lsr t.pagesize) (t.number_of_pages - 1) in
+  let number_of_pages = p1 - p0 + 1 in
   let physical_address = p0 lsl t.pagesize in
   let fn idx =
     let pos = physical_address + (idx * (1 lsl t.pagesize)) in
     t.map t.fd ~pos (1 lsl t.pagesize)
   in
   let bstrs = Array.init number_of_pages fn in
+  let to_write = ref false in
+  let top = ref (off + len) in
   let fn node =
-    let off', value = Dllist.data node in
-    if off' >= off && off' + 1 <= off + len then
-      persist t (off' - physical_address) bstrs value
+    let off', (Value (k, _) as value) = Dllist.data node in
+    let len' = length_of_value k in
+    if off' >= off && off' + 1 <= off + len then begin
+      to_write := true;
+      top := Int.max !top (off' + len');
+      persist t (off' - physical_address) bstrs value;
+      Dllist.remove node
+    end
   in
-  Dllist.iter fn t.pipeline
+  Dllist.iter fn t.pipeline;
+  t.areas <- Diet.remove (off, !top) t.areas;
+  if !to_write then t.writev t.fd ~pos:physical_address (Array.to_list bstrs);
+  if !to_write then Cachet.invalidate t.cache ~off ~len
 
 (* [commit] is a little complex because the pages we want to update do not
    necessarily follow each other. We therefore use a [hashtbl] to keep the

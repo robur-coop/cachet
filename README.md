@@ -79,4 +79,17 @@ to obtain the requested value. As a result, it's up to the user to know where
 the cooperation point should be placed and whether it makes sense to use, for
 example, `get_string` or just use `load` interspersed with cooperation points.
 
+## Cachet and write operations
+
+It is possible to have write access (only for so-called atomic data) on a block
+device for which reading is done by `mmap` and writing will only be effective
+via `msync`. `Cachet_wr` provides an implementation of a _write pipeline_ and
+ensures consistency between writes and reads.
+
+Finally, writes can be made effective via the `commit` function (which flushes
+the entire write pipeline) or `persist` (which flushes part of the pipeline
+according to the area requested by the user). It is during these operations
+that the `writev` function is actually called, which should be equivalent to
+`pwrite(3P)`+`msync(3P)`.
+
 [unix-map-file]: https://ocaml.org/manual/5.2/api/Unix.html#1_Mappingfilesintomemory
