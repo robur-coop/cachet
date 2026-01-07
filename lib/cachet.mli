@@ -1,6 +1,6 @@
 type 'fd map = 'fd -> pos:int -> int -> Bstr.t
 (** A value [map : 'fd map] when applied [map fd ~pos len] reads a
-    {!type:bigstring} at [pos]. [map] must return as much data as is available,
+    {!type:Bstr.t} at [pos]. [map] must return as much data as is available,
     though never more than [len] bytes. [map] never fails. Instead, an empty
     [bigstring] must be returned if e.g. the position is out of range. Depending
     on how the cache is configured (see {!val:make}), [map] never read more than
