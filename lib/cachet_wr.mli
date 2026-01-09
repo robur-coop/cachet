@@ -41,6 +41,8 @@ val make :
   -> 'fd
   -> 'fd t
 
+val cache : 'fd t -> 'fd Cachet.t
+
 val commit : 'fd t -> unit
 (** [commit t] flushes the write pipeline completely and effectively apply all
     writes by issuing the latest version of the pages via one or more calls to
