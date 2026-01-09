@@ -142,8 +142,8 @@ let get : type a. 'fd t -> int -> a v -> a =
     | Vi32 Be -> Cachet.get_int32_be t.cache offset
     | Vi32 Ne -> Cachet.get_int32_ne t.cache offset
     | Vi64 Le -> Cachet.get_int64_le t.cache offset
-    | Vi64 Be -> Cachet.get_int64_le t.cache offset
-    | Vi64 Ne -> Cachet.get_int64_le t.cache offset
+    | Vi64 Be -> Cachet.get_int64_be t.cache offset
+    | Vi64 Ne -> Cachet.get_int64_ne t.cache offset
     | Vi128 -> Cachet.get_string t.cache ~len:16 offset
   else unroll t ~at:offset k
 
