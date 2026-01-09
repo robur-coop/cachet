@@ -91,6 +91,8 @@ let make ?cachesize ?(pagesize = 1 lsl 12) ~map ~writev ~number_of_pages fd =
   let areas = Diet.empty in
   { cache; pagesize; pipeline; areas; fd; number_of_pages; map; writev }
 
+let cache { cache; _ } = cache
+
 let unroll : type a. 'fd t -> at:int -> a v -> a =
  fun t ~at k ->
   let buf = Bytes.make (16 * 3) '\000' in
