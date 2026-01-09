@@ -171,7 +171,7 @@ let invalidate t ~off:logical_address ~len =
   let start_page = logical_address lsr t.pagesize in
   let end_page = (logical_address + len) lsr t.pagesize in
   let mask = (1 lsl t.cachesize) - 1 in
-  for i = start_page to end_page - 1 do
+  for i = start_page to end_page do
     t.arr.(hash 0l (i lsl t.pagesize) land mask) <- None
   done
 
