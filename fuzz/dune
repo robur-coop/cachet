@@ -6,5 +6,6 @@
 
 (rule
  (alias runtest)
+ (package cachet)
  (action
   (run ./fuzz.exe)))

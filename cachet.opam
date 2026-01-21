@@ -25,5 +25,6 @@ depends: [
   "ohex"        {with-test}
   "logs"        {with-test}
   "fmt"         {with-test}
+  "crowbar"     {with-test}
 ]
 x-maintenance-intent: [ "(latest)" ]
